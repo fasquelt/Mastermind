@@ -64,6 +64,27 @@ void serveur_appli(char *service)
 {
 
 /* A completer ... */
+int serveurSocket;
+int socketConnexion;
+int nbReq = 1; // Nombre de requètes en file d'attente, 1 pour le moment
+// Il faudrait créer des tableaux de socketConnexion et des tableau de p_adr_client pour gérer plusieurs client.
+
+struct sockaddr_in *p_adr_serveur;
+struct sockaddr_in *p_adr_client;
+
+serveurSocket = h_socket(AF_INET,SOCK_STREAM);
+adr_socket(service, NULL,SOCK_STREAM, &p_adr_serveur);
+h_bind(serveurSocket, p_adr_serveur);
+h_listen(serveurSocket, nbReq);
+socketConnexion = h_accept(serveurSocket, p_adr_client);
+
+/* Gestion des échanges à faire ici*/
+
+
+
+/*----------------------------------------------------------------*/
+
+h_close(socketConnexion); // Fermeture de la connexion avec le client.
 
 }
 
