@@ -68,9 +68,102 @@ void client_appli (char *serveur,char *service)
 /* procedure correspondant au traitement du client de votre application */
 
 {
-  
+	// PHASE DE CONNEXION //
 
-/* a completer .....  */
+	// Création et initialisation de la structure "socket"
+	struct sockaddr_in *socket = malloc(sizeof(struct sockaddr_in));
+	adr_socket(service, NULL, SOCK_STREAM, &socket);
+
+	// Création de la socket
+	int id_socket = h_socket(AF_INET, SOCK_STREAM); // AF_INET pour IPv4 et SOCK_STREAM pour TCP
+
+	// Message d'erreur de création de la socket
+	if (id_socket == -1){ // Si le test est vrai c'est que la création de la socket à échouée
+		printf("Impossible de créer la socket\n");
+		return;
+	}
+
+	// on se connecte au serveur
+	h_connect(id_socket, socket);
+
+	// PHASE DE COMMUNICATION (LE JEU) //
+
+	char *bufferEmission = malloc(1000 * sizeof(char));
+
+	printf("Choisissez votre longueur de mot : Saisir :  4 | 6 | 8 \n");
+	scanf("%s", bufferEmission);
+	int length = (int)bufferEmission;
+
+	// Ecrit dans la socket le choix du niveau
+	h_writes(id_socket, bufferEmission, strlen(bufferEmission));
+
+	// Connexion toujours active ?
+	h_reads(id_socket, bufferEmission, 9);
+
+	// Affichage du nombre d'essais au départ
+	int triesleft = length+2;
+	h_reads(id_socket, triesleft, 2);
+	printf("Vous avez %d essais.\n", triesleft);
+
+	// Lecture du nombre de pions
+	h_reads(id_socket, length, 2);
+
+	// Affichage du nombre de lettres
+	printf("Il y a %d pions dans le mot. \n", length);
+
+	// Proposition couleur et position
+	char win[2];
+	char* ligne;
+	char* found;
+
+	// Tant que la connexion n'est pas en "FERMETURE"
+	while (strcmp(bufferEmission, "FERMETURE"))
+	{
+		// Choix de la nouvelle position
+		printf("Entrez une position : \n");
+		scanf("%d", bufferEmission);
+
+		h_writes(id_socket, bufferEmission, 1);
+		h_reads(id_socket, bufferEmission, 4);
+
+		// Choix de la nouvelle couleur
+		printf("Entrez une couleur : \n");
+		scanf("%s", bufferEmission);
+
+		// Envoi de la lettre au serveur
+		h_writes(id_socket, bufferEmission, 1);
+		h_reads(id_socket, bufferEmission, 4);
+
+		if (bufferEmission[0] == 'J')
+		{
+			printf("La lettre demandée a déjà été jouée, veuillez choisir une autre lettre.\n");
+		}
+
+		// Connexion toujours active ?
+		h_reads(id_socket, bufferEmission, 9);
+
+		// On lit le mot à trouver
+		h_reads(id_socket, ligne, 2);
+
+		// On lit le nombre d'essais
+		h_reads(id_socket, triesleft, 2);
+
+		// Affichage du mot
+		printf("\n%s\n", found);
+
+		// Affichage du nb d'essais restants
+		printf("Nombre d'essais restants : %s\n", triesleft);
+
+		// On récupère le win côté serveur
+		h_reads(id_socket, win, 1);
+
+		// Si le jeu est terminé (nb_essais=0 ou que win=1)
+		if (triesleft == 0 || atoi(win) == 1)
+		{
+			h_reads(id_socket, bufferEmission, 9);
+		}
+	}
+
 
  }
 
