@@ -18,7 +18,7 @@
 #include<stdlib.h>
 #include <string.h>
 
-#include "couleurs.c"
+#include "pimple.c"
 
 #include "fon.h"   		/* primitives de la boite a outils */
 
@@ -101,12 +101,52 @@ void client_appli (char *serveur,char *service)
 	h_writes(id_socket, bufferEmission, strlen(bufferEmission));
 
 	//Test d'affichage du jeu Facile
+	/*
 	char* bufferJeuFacile = malloc(12 * sizeof(char));
 	int readed = 0;
 	while (readed == 0) {
 		readed = h_reads(id_socket, bufferJeuFacile, 12);
 		printf("Affichage du jeu: %s\n", bufferJeuFacile);
-	}	
+	}
+	*/
+
+	char* bufferJeuMoyen = malloc(5 * sizeof(char));
+	int readed = 0;
+	while (readed == 0) {
+		readed = h_reads(id_socket, bufferJeuMoyen, 5);
+	}
+	int i = 0;
+	while (bufferJeuMoyen[i]) {
+		if (bufferJeuMoyen[i] == Rouge) {
+			printf("Rouge ");
+		}
+		else if (bufferJeuMoyen[i] == Bleue) {
+			printf("Bleue ");
+		}
+		else if (bufferJeuMoyen[i] == Vert) {
+			printf("Vert ");
+		}
+		else if (bufferJeuMoyen[i] == Jaune) {
+			printf("Jaune ");
+		}
+		else if (bufferJeuMoyen[i] == Violet) {
+			printf("Violet ");
+		}
+		else if (bufferJeuMoyen[i] == Orange) {
+			printf("Orange ");
+		}
+		else if (bufferJeuMoyen[i] == Marron) {
+			printf("Marron ");
+		}
+		else if (bufferJeuMoyen[i] == Rose) {
+			printf("Rose ");
+		}
+		else {
+			printf("Flushia ");
+		}
+		i++;
+	}
+	printf("\n");
 
 	// Connexion toujours active ?
 	h_reads(id_socket, bufferEmission, 9);
@@ -133,7 +173,6 @@ void client_appli (char *serveur,char *service)
 		// Choix de la nouvelle position
 		printf("Entrez une position : \n");
 		scanf("%d",bufferEmission);
-		//printf("tests tfvgyhujik %d\n",(int) bufferEmission[0]);
 
 		h_writes(id_socket, bufferEmission, 1);
 		h_reads(id_socket, bufferEmission, 4);

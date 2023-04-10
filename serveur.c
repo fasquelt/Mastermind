@@ -19,7 +19,7 @@
 #include<sys/signal.h>
 #include<sys/wait.h>
 #include<stdlib.h>
-#include "couleurs.c"
+#include "pimple.c"
 
 #include "fon.h"     		/* Primitives de la boite a outils */
 
@@ -70,7 +70,7 @@ void serveur_appli(char *service)
 
 {
 
-	/* A completer ... */
+	/* Initialisation de la connexion */
 	int serveurSocket;
 	int socketConnexion;
 	int nbReq = 1; // Nombre de requètes en file d'attente, 1 pour le moment
@@ -85,14 +85,16 @@ void serveur_appli(char *service)
 	h_listen(serveurSocket, nbReq);
 	socketConnexion = h_accept(serveurSocket, p_adr_client);
 
-	/* Gestion des échanges à faire ici*/
+	/* Initialisation de la partie */
 	char *bufferEmission = malloc(1000 * sizeof(char));
 	int readed = 0;
 	while (readed == 0) {
 		readed = h_reads(socketConnexion, bufferEmission, 1);
 		printf("%d\n", readed);
 	}
-	
+	/* 
+		Partie de difficulté simple (4 couleurs)
+	*/
 	if ((int)bufferEmission[0] == 48) // 48 le code ASCII de 0
 	{
 	// Rouge: ro, Bleu: bl, Jaune, ja, Vert, ve
@@ -100,7 +102,9 @@ void serveur_appli(char *service)
 		bufferJeuFacile = "ro bl ja ve";
 		h_writes(socketConnexion, bufferJeuFacile, 12);
 	}
-
+	/* 
+		Partie de difficulté moyenne (5 couleurs) 
+	*/
 	else if ((int)bufferEmission[0] == 49)
 	{
 		// Jeu à 5 couleurs
@@ -109,8 +113,8 @@ void serveur_appli(char *service)
 		char *bufferJeuMoyen = malloc(SIZE_MOYEN * sizeof(char));
 		u_int8_t nb;
 		bool used;
-		srand(time(NULL));
-		// Crée mon tableau de jeu de manière aléatoire sans doublon.
+		srand(time(NULL)); // Initialisation de l'aléatoire.
+		// Création de ma liste de couleurs de manière aléatoire sans doublon.
 		for (int i = 0; i < SIZE_MOYEN; i++) {
 			used = false;
 			nb = rand() % 9;
@@ -124,22 +128,27 @@ void serveur_appli(char *service)
 				alreadyUsed[i] = nb;
 			}
 		}     	
-		// printf("%d\n", bufferJeuMoyen[1]);
 		h_writes(socketConnexion, bufferJeuMoyen, 5);
 	}
-
+	/* 
+		Partie de difficulté difficile (6 couleurs)
+	*/
 	else // C'est du côté Client que l'on fait la vérification de la valeur entrée.
 	{
-		// Jeu à 6 couleurs
      	char *bufferJeuDifficile = malloc(18 * sizeof(char));
 
 		h_writes(socketConnexion, bufferJeuDifficile, 18);
 	}
 
 
-	/*----------------------------------------------------------------*/
+	/*
+		Gestion de la partie
+	*/
 
-	h_close(socketConnexion); // Fermeture de la connexion avec le client.
+
+	/*----------------------------------------------------------------*/
+	// Fermeture de la connexion avec le client.
+	h_close(socketConnexion); 
 
 }
 
