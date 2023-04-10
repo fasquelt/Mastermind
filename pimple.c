@@ -1,12 +1,12 @@
 
 /*
-    Définition des 9 couleurs du Mastermind.
+    Définition des 9 couleurs des picots du Mastermind.
 */
 /* 
     Il est possible d'en rajouter, il faudra juste modifier les choix du joueur.
     Cette modification ce fait depuis client.c.
 */
-typedef enum picoColors {
+typedef enum pimpleColors {
     Rouge = 0,
     Bleue = 1,
     Vert = 2,
@@ -16,4 +16,4 @@ typedef enum picoColors {
     Marron = 6,
     Rose = 7,
     Flushia = 8
-} Picot;
+} pimple;
