@@ -1,6 +1,6 @@
 /* Programme d'exemple de gestion fenetres et curseur */
 /* gcc ThisFile.c  -L /usr/ccs/lib -L /usr/ucblib -lcurses -ltermcap  */
-/* #include <ncurses.h> */\
+/* #include <ncurses.h> */
 
 #include <curses.h>
 #include <unistd.h>

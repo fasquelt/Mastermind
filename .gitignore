@@ -3,3 +3,5 @@ serveur.o
 client.o
 client
 fon.o
+
+.vscode/

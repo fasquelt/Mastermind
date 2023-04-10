@@ -16,6 +16,9 @@
 #include <sys/signal.h>
 #include <sys/wait.h>
 #include<stdlib.h>
+#include <string.h>
+
+#include "couleurs.c"
 
 #include "fon.h"   		/* primitives de la boite a outils */
 
@@ -90,12 +93,20 @@ void client_appli (char *serveur,char *service)
 
 	char *bufferEmission = malloc(1000 * sizeof(char));
 
-	printf("Choisissez votre longueur de mot : Saisir :  4 | 6 | 8 \n");
+	printf("Choisissez votre difficultée : Saisir :  0 'Facile' | 1 'Moyen' | 2 'Difficile' \n");
 	scanf("%s", bufferEmission);
 	int length = (int)bufferEmission;
 
-	// Ecrit dans la socket le choix du niveau
+	// Ecrit dans la socket le choix de la difficultée
 	h_writes(id_socket, bufferEmission, strlen(bufferEmission));
+
+	//Test d'affichage du jeu Facile
+	char* bufferJeuFacile = malloc(12 * sizeof(char));
+	int readed = 0;
+	while (readed == 0) {
+		readed = h_reads(id_socket, bufferJeuFacile, 12);
+		printf("Affichage du jeu: %s\n", bufferJeuFacile);
+	}	
 
 	// Connexion toujours active ?
 	h_reads(id_socket, bufferEmission, 9);
@@ -121,7 +132,8 @@ void client_appli (char *serveur,char *service)
 	{
 		// Choix de la nouvelle position
 		printf("Entrez une position : \n");
-		scanf("%d", bufferEmission);
+		scanf("%d",bufferEmission);
+		//printf("tests tfvgyhujik %d\n",(int) bufferEmission[0]);
 
 		h_writes(id_socket, bufferEmission, 1);
 		h_reads(id_socket, bufferEmission, 4);
