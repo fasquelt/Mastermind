@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <curses.h>
 #include<time.h>
+#include <string.h>
 
 #include<sys/signal.h>
 #include<sys/wait.h>
@@ -76,81 +77,148 @@ void serveur_appli(char *service)
 	int nbReq = 1; // Nombre de requètes en file d'attente, 1 pour le moment
 	// Il faudrait créer des tableaux de socketConnexion et des tableau de p_adr_client pour gérer plusieurs client.
 
-	struct sockaddr_in *p_adr_serveur;
-	struct sockaddr_in *p_adr_client;
+	struct sockaddr_in *p_adr_serveur = NULL;
+	struct sockaddr_in *p_adr_client = NULL;
 
 	serveurSocket = h_socket(AF_INET,SOCK_STREAM);
-	adr_socket(service, NULL,SOCK_STREAM, &p_adr_serveur);
+	adr_socket(service, NULL, SOCK_STREAM, &p_adr_serveur);
 	h_bind(serveurSocket, p_adr_serveur);
 	h_listen(serveurSocket, nbReq);
 	socketConnexion = h_accept(serveurSocket, p_adr_client);
 
+	char play_again;
+	do {
 	/* Initialisation de la partie */
-	char *bufferEmission = malloc(1000 * sizeof(char));
-	int readed = 0;
-	while (readed == 0) {
-		readed = h_reads(socketConnexion, bufferEmission, 1);
-		printf("%d\n", readed);
-	}
+		char *bufferEmission = malloc(sizeof(char));	
+		h_reads(socketConnexion, bufferEmission, 1);
+	
 	/* 
 		Partie de difficulté simple (4 couleurs)
 	*/
-	if ((int)bufferEmission[0] == 48) // 48 le code ASCII de 0
-	{
-	// Rouge: ro, Bleu: bl, Jaune, ja, Vert, ve
-     	char *bufferJeuFacile = malloc(12 * sizeof(char));
-		bufferJeuFacile = "ro bl ja ve";
-		h_writes(socketConnexion, bufferJeuFacile, 12);
-	}
-	/* 
-		Partie de difficulté moyenne (5 couleurs) 
-	*/
-	else if ((int)bufferEmission[0] == 49)
-	{
-		// Jeu à 5 couleurs
-		int alreadyUsed[5];
-		// Variable contenant la partie en cours.
-		char *bufferJeuMoyen = malloc(SIZE_MOYEN * sizeof(char));
-		u_int8_t nb;
-		bool used;
-		srand(time(NULL)); // Initialisation de l'aléatoire.
-		// Création de ma liste de couleurs de manière aléatoire sans doublon.
-		for (int i = 0; i < SIZE_MOYEN; i++) {
-			used = false;
-			nb = rand() % 9;
-			for (int j = 0; j < 4; j++) {
-				if (nb == alreadyUsed[j]) {
-					used = true;
-				}
-			}
-			if (!used) {
-				bufferJeuMoyen[i] = nb;
-				alreadyUsed[i] = nb;
-			}
-		}     	
-		h_writes(socketConnexion, bufferJeuMoyen, 5);
-	}
-	/* 
-		Partie de difficulté difficile (6 couleurs)
-	*/
-	else // C'est du côté Client que l'on fait la vérification de la valeur entrée.
-	{
-     	char *bufferJeuDifficile = malloc(18 * sizeof(char));
+	
+		if (bufferEmission[0]-48 == 0) // 48 le code ASCII de 0
+		{
+			play_game(socketConnexion, SIZE_FACILE);
+		}
 
-		h_writes(socketConnexion, bufferJeuDifficile, 18);
-	}
+	// -------------------------------------------------------------------------------
+		
+		/* 
+			Partie de difficulté moyenne (5 couleurs) 
+		*/
+		else if (bufferEmission[0]-48 == 1)
+		{
+			play_game(socketConnexion, SIZE_MOYEN);
+		}
 
+	// -------------------------------------------------------------------------------
 
-	/*
-		Gestion de la partie
-	*/
+		/* 
+			Partie de difficulté difficile (6 couleurs)
+		*/
+		else // C'est du côté Client que l'on fait la vérification de la valeur entrée.
+		{
+			play_game(socketConnexion, SIZE_DIFFICILE);
+		}
 
+		free(bufferEmission);
+		h_reads(socketConnexion, &play_again, 1);
+	} while (play_again == 'o');
 
 	/*----------------------------------------------------------------*/
 	// Fermeture de la connexion avec le client.
-	h_close(socketConnexion); 
+	h_shutdown(socketConnexion, FIN_ECHANGES);
+	h_close(socketConnexion);
 
 }
 
 /******************************************************************************/	
 
+
+/*
+	Fonction de vérification du résultat
+*/
+int check_result(int res[], char user_value[], char bufferRes[]) {
+	int index_bufferRes = 0;
+	int correct = 0;
+
+	for (int index = 0; index < strlen(user_value); index++) {
+		int isIn = 0;
+		for (int j = 0; j < strlen(user_value); j++) {
+			if (((int)user_value[index])-48 == res[j]) {
+				
+				if (index == j) {
+					bufferRes[index_bufferRes] = 'c';
+					correct += 1;
+				}
+				else {
+					bufferRes[index_bufferRes] = 'p';
+				}
+				isIn = 1;
+			}
+		}
+		if (!isIn)
+			bufferRes[index_bufferRes] = 'n';
+		index_bufferRes += 1;
+	}
+	if (correct == strlen(user_value))
+		return 1;
+	return 0;
+}
+
+/*
+	Init Game by initialising the color's array to find
+*/
+void init_game(int *res, int size) {
+	int alreadyUsed[size];
+	u_int8_t nb;
+	bool used;
+	srand(time(NULL)); // Initialisation de l'aléatoire.
+	// Création de ma liste de couleurs de manière aléatoire sans doublon.
+	int index = 0;
+	while (index < size) {
+		used = false;
+		nb = rand() % 9;
+		for (int j = 0; j < 4; j++) {
+			if (nb == alreadyUsed[j]) {
+				used = true;
+			}
+		}
+		if (!used) {
+			res[index] = (char)nb;
+			alreadyUsed[index] = (char)nb;
+			index ++;
+		}
+	}
+}
+
+/*
+	Controle the game
+*/
+void play_game(int socket, int difficulty) {
+	// Variable contenant la partie en cours.
+		char bufferJeuMoyen[difficulty];
+		// Variable contenant le résultat à trouver
+		int res[difficulty];
+		
+		init_game(res, difficulty);
+
+		h_reads(socket, bufferJeuMoyen, difficulty);
+		
+		char* bufferToReturn = malloc(difficulty * sizeof(char));
+		char* bufferFinish = malloc(1 * sizeof(char));
+
+		while (!check_result(res, bufferJeuMoyen, bufferToReturn)) {
+			h_writes(socket, bufferToReturn, difficulty);
+			bufferFinish[0] = 0;
+			h_writes(socket, bufferFinish, 1);
+
+			h_reads(socket, bufferJeuMoyen, difficulty);
+		}
+
+		h_writes(socket, bufferToReturn, difficulty);
+		bufferFinish[0] = 1;
+		h_writes(socket, bufferFinish, 1);
+		free(bufferToReturn);
+		free(bufferFinish);
+}

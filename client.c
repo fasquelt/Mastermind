@@ -27,13 +27,13 @@
 
 void client_appli (char *serveur, char *service);
 
+int nb_essai = 1;
 
 /*****************************************************************************/
 /*--------------- programme client -----------------------*/
 
 int main(int argc, char *argv[])
 {
-
 	char *serveur= SERVEUR_DEFAUT; /* serveur par defaut */
 	char *service= SERVICE_DEFAUT; /* numero de service par defaut (no de port) */
 
@@ -90,55 +90,95 @@ void client_appli (char *serveur,char *service)
 	h_connect(id_socket, socket);
 
 	// PHASE DE COMMUNICATION (LE JEU) //
+	char play_again;
+	do {	
+		char *bufferEmission = malloc(sizeof(char));
 
-	char *bufferEmission = malloc(1000 * sizeof(char));
+		while ((bufferEmission[0]-48 != 0) && (bufferEmission[0]-48 != 1) && (bufferEmission[0]-48 != 2))
+		{
+			printf("Choisissez votre difficultée : Saisir :  0 'Facile' | 1 'Moyen' | 2 'Difficile' \n");
+			scanf("%s", bufferEmission);
+		}
 
-	printf("Choisissez votre difficultée : Saisir :  0 'Facile' | 1 'Moyen' | 2 'Difficile' \n");
-	scanf("%s", bufferEmission);
-	int length = (int)bufferEmission;
+		// Ecrit dans la socket le choix de la difficultée
+		h_writes(id_socket, bufferEmission, strlen(bufferEmission));
 
-	// Ecrit dans la socket le choix de la difficultée
-	h_writes(id_socket, bufferEmission, strlen(bufferEmission));
+		int size_mastermind = (bufferEmission[0]-48)+4; // -48 pour revenir à un int classique, +4 pour avoir les size du mastermind
+		init_game_client(id_socket, size_mastermind);
+		free(bufferEmission);
+		do {
+			printf("Voulez-vous rejouer ? o | n\n");
+			scanf(" %c", &play_again);
+		} while (play_again != 'o' && play_again != 'n');
+		h_writes(id_socket, &play_again, 1);
+	} while (play_again == 'o');
 
-	//Test d'affichage du jeu Facile
-	/*
-	char* bufferJeuFacile = malloc(12 * sizeof(char));
-	int readed = 0;
-	while (readed == 0) {
-		readed = h_reads(id_socket, bufferJeuFacile, 12);
-		printf("Affichage du jeu: %s\n", bufferJeuFacile);
+	/* Fermeture connexion */
+	h_shutdown(id_socket, FIN_ECHANGES);
+	h_close(id_socket);
+ }
+
+/*****************************************************************************/
+
+/*
+	Réagit en fonction du résultat du serveur par rapport à la combinaison du client.
+*/
+int check_serv_res(char* bufferRes, int socket, int size) {
+	h_reads(socket, bufferRes, size);
+	printf("%s", bufferRes);	
+
+	char* bufferIsFinished = malloc(1 * sizeof(char));
+	h_reads(socket, bufferIsFinished, 1);
+	
+
+	if (bufferIsFinished[0] == 1) {
+		printf("Vous avez gagné en %d essais !\n", nb_essai);
+		free(bufferIsFinished);
+		return 1;
 	}
-	*/
+	free(bufferIsFinished);
+	return 0;
+}
 
-	char* bufferJeuMoyen = malloc(5 * sizeof(char));
-	int readed = 0;
-	while (readed == 0) {
-		readed = h_reads(id_socket, bufferJeuMoyen, 5);
-	}
+/*
+	Récupère la combinaison du client et la transmet au serveur
+*/
+void play(char* bufferGame, int socket, int difficulty) {
+	printf("Entrez une combinaison de %d couleurs (sans espace entre les chiffres): \n", difficulty);
+	scanf("%s", bufferGame);
+
+	print_colors(bufferGame);
+	h_writes(socket, bufferGame, difficulty);
+}
+
+/*
+	Affiche les couleurs choisient par le client
+*/
+void print_colors(char* buffer_colors) {
 	int i = 0;
-	while (bufferJeuMoyen[i]) {
-		if (bufferJeuMoyen[i] == Rouge) {
+	while (buffer_colors[i]) {
+		if (buffer_colors[i]-48 == Rouge) {
 			printf("Rouge ");
 		}
-		else if (bufferJeuMoyen[i] == Bleue) {
+		else if (buffer_colors[i]-48 == Bleue) {
 			printf("Bleue ");
 		}
-		else if (bufferJeuMoyen[i] == Vert) {
+		else if (buffer_colors[i]-48 == Vert) {
 			printf("Vert ");
 		}
-		else if (bufferJeuMoyen[i] == Jaune) {
+		else if (buffer_colors[i]-48 == Jaune) {
 			printf("Jaune ");
 		}
-		else if (bufferJeuMoyen[i] == Violet) {
+		else if (buffer_colors[i]-48 == Violet) {
 			printf("Violet ");
 		}
-		else if (bufferJeuMoyen[i] == Orange) {
+		else if (buffer_colors[i]-48 == Orange) {
 			printf("Orange ");
 		}
-		else if (bufferJeuMoyen[i] == Marron) {
+		else if (buffer_colors[i]-48 == Marron) {
 			printf("Marron ");
 		}
-		else if (bufferJeuMoyen[i] == Rose) {
+		else if (buffer_colors[i]-48 == Rose) {
 			printf("Rose ");
 		}
 		else {
@@ -147,76 +187,23 @@ void client_appli (char *serveur,char *service)
 		i++;
 	}
 	printf("\n");
+}
 
-	// Connexion toujours active ?
-	h_reads(id_socket, bufferEmission, 9);
+/*
+	Controle la partie du client
+*/
+void init_game_client(int socket,int size) {
+	char* bufferJeuMoyen = malloc(size * sizeof(char));
 
-	// Affichage du nombre d'essais au départ
-	int triesleft = length+2;
-	h_reads(id_socket, triesleft, 2);
-	printf("Vous avez %d essais.\n", triesleft);
+	printf("Les couleurs disponibles sont 0->rouge, 1->bleue, 2->vert, 3->jaune, 4->violet, 5->orange, 6->marron, 7->rose, 8->flushia\n");
 
-	// Lecture du nombre de pions
-	h_reads(id_socket, length, 2);
+	play(bufferJeuMoyen, socket, size);
 
-	// Affichage du nombre de lettres
-	printf("Il y a %d pions dans le mot. \n", length);
-
-	// Proposition couleur et position
-	char win[2];
-	char* ligne;
-	char* found;
-
-	// Tant que la connexion n'est pas en "FERMETURE"
-	while (strcmp(bufferEmission, "FERMETURE"))
-	{
-		// Choix de la nouvelle position
-		printf("Entrez une position : \n");
-		scanf("%d",bufferEmission);
-
-		h_writes(id_socket, bufferEmission, 1);
-		h_reads(id_socket, bufferEmission, 4);
-
-		// Choix de la nouvelle couleur
-		printf("Entrez une couleur : \n");
-		scanf("%s", bufferEmission);
-
-		// Envoi de la lettre au serveur
-		h_writes(id_socket, bufferEmission, 1);
-		h_reads(id_socket, bufferEmission, 4);
-
-		if (bufferEmission[0] == 'J')
-		{
-			printf("La lettre demandée a déjà été jouée, veuillez choisir une autre lettre.\n");
-		}
-
-		// Connexion toujours active ?
-		h_reads(id_socket, bufferEmission, 9);
-
-		// On lit le mot à trouver
-		h_reads(id_socket, ligne, 2);
-
-		// On lit le nombre d'essais
-		h_reads(id_socket, triesleft, 2);
-
-		// Affichage du mot
-		printf("\n%s\n", found);
-
-		// Affichage du nb d'essais restants
-		printf("Nombre d'essais restants : %s\n", triesleft);
-
-		// On récupère le win côté serveur
-		h_reads(id_socket, win, 1);
-
-		// Si le jeu est terminé (nb_essais=0 ou que win=1)
-		if (triesleft == 0 || atoi(win) == 1)
-		{
-			h_reads(id_socket, bufferEmission, 9);
-		}
+	char* bufferRes = malloc(5 * sizeof(char));
+	int run = 0;
+	while (!check_serv_res(bufferRes, socket, size)) {
+		play(bufferJeuMoyen, socket, size);
+		nb_essai += 1;
 	}
-
-
- }
-
-/*****************************************************************************/
-
+	free(bufferJeuMoyen);
+}
