@@ -81,7 +81,7 @@ void client_appli (char *serveur,char *service)
 	int id_socket = h_socket(AF_INET, SOCK_STREAM); // AF_INET pour IPv4 et SOCK_STREAM pour TCP
 
 	// Message d'erreur de création de la socket
-	if (id_socket == -1){ // Si le test est vrai c'est que la création de la socket à échouée
+	if (id_socket == -1){ // Si le test est vrai c'est que la création de la socket a échoué
 		printf("Impossible de créer la socket\n");
 		return;
 	}
@@ -101,7 +101,7 @@ void client_appli (char *serveur,char *service)
 			scanf("%s", bufferEmission);
 		}
 
-		// Ecrit dans la socket le choix de la difficultée
+		// Ecrit dans la socket le choix de la difficulté
 		h_writes(id_socket, bufferEmission, strlen(bufferEmission));
 
 		int size_mastermind = (bufferEmission[0]-48)+4; // -48 pour revenir à un int classique, +4 pour avoir les size du mastermind
@@ -163,7 +163,7 @@ void play(char* bufferGame, int socket, int difficulty) {
 }
 
 /*
-	Affiche les couleurs choisient par le client dans le terminal
+	Affiche les couleurs choisies par le client dans le terminal
 	@param char* buffer_colors
 */
 void print_colors(char* buffer_colors) {
@@ -191,7 +191,7 @@ void print_colors(char* buffer_colors) {
 			printf("Rose ");
 		}
 		else {
-			printf("Flushia ");
+			printf("Fushia ");
 		}
 		i++;
 	}
@@ -207,7 +207,7 @@ void init_game_client(int socket,int size) {
 	// Initialise le buffer de notre partie
 	char* bufferJeu = malloc(size * sizeof(char));
 
-	printf("Les couleurs disponibles sont 0->rouge, 1->bleue, 2->vert, 3->jaune, 4->violet, 5->orange, 6->marron, 7->rose, 8->flushia\n");
+	printf("Les couleurs disponibles sont 0->rouge, 1->bleue, 2->vert, 3->jaune, 4->violet, 5->orange, 6->marron, 7->rose, 8->fuschia\n");
 
 	play(bufferJeu, socket, size);
 	// Initialise le buffer d'analyse du résultat fournit par le serveur
