@@ -207,7 +207,12 @@ void init_game_client(int socket,int size) {
 	// Initialise le buffer de notre partie
 	char* bufferJeu = malloc(size * sizeof(char));
 
-	printf("Les couleurs disponibles sont 0->rouge, 1->bleue, 2->vert, 3->jaune, 4->violet, 5->orange, 6->marron, 7->rose, 8->fuschia\n");
+	printf("Les couleurs disponibles sont: 0->rouge, 1->bleue, 2->vert, 3->jaune, 4->violet, 5->orange, 6->marron, 7->rose, 8->fuschia\n");
+	printf("\n");
+	printf("Les résultats possibles sont:\n");
+	printf("c -> bonne couleur\n");
+	printf("p -> bonne couleur pas bien positionnée\n");
+	printf("n -> mauvaise couleur\n");
 
 	play(bufferJeu, socket, size);
 	// Initialise le buffer d'analyse du résultat fournit par le serveur
