@@ -75,7 +75,7 @@ void client_appli (char *serveur,char *service)
 
 	// Création et initialisation de la structure "socket"
 	struct sockaddr_in *socket = malloc(sizeof(struct sockaddr_in));
-	adr_socket(service, NULL, SOCK_STREAM, &socket);
+	adr_socket(service, serveur, SOCK_STREAM, &socket);
 
 	// Création de la socket
 	int id_socket = h_socket(AF_INET, SOCK_STREAM); // AF_INET pour IPv4 et SOCK_STREAM pour TCP
@@ -91,9 +91,10 @@ void client_appli (char *serveur,char *service)
 
 	// PHASE DE COMMUNICATION (LE JEU) //
 	char play_again;
+	// On reste dans la boucle tant que le client redemande à jouer
 	do {	
 		char *bufferEmission = malloc(sizeof(char));
-
+		// Gestion du choix de difficulté
 		while ((bufferEmission[0]-48 != 0) && (bufferEmission[0]-48 != 1) && (bufferEmission[0]-48 != 2))
 		{
 			printf("Choisissez votre difficultée : Saisir :  0 'Facile' | 1 'Moyen' | 2 'Difficile' \n");
@@ -106,6 +107,7 @@ void client_appli (char *serveur,char *service)
 		int size_mastermind = (bufferEmission[0]-48)+4; // -48 pour revenir à un int classique, +4 pour avoir les size du mastermind
 		init_game_client(id_socket, size_mastermind);
 		free(bufferEmission);
+		// Gère la demande de nouvelle partie et transmet l'information au serveur
 		do {
 			printf("Voulez-vous rejouer ? o | n\n");
 			scanf(" %c", &play_again);
@@ -121,27 +123,36 @@ void client_appli (char *serveur,char *service)
 /*****************************************************************************/
 
 /*
-	Réagit en fonction du résultat du serveur par rapport à la combinaison du client.
+	Réagit en fonction du résultat du serveur par rapport à la combinaison du client
+	@param char* bufferRes
+	@param int socket
+	@param int size: Nombre de pines à trouver
+	@return 1 si partie terminée, 0 sinon
 */
 int check_serv_res(char* bufferRes, int socket, int size) {
 	h_reads(socket, bufferRes, size);
-	printf("%s", bufferRes);	
+	printf("%s\n", bufferRes);	
 
 	char* bufferIsFinished = malloc(1 * sizeof(char));
+	// Récupère l'information si la partie est terminés ou non par le serveur
 	h_reads(socket, bufferIsFinished, 1);
 	
-
+	// S'effectue si la partie est terminée
 	if (bufferIsFinished[0] == 1) {
 		printf("Vous avez gagné en %d essais !\n", nb_essai);
 		free(bufferIsFinished);
 		return 1;
 	}
+
 	free(bufferIsFinished);
 	return 0;
 }
 
 /*
-	Récupère la combinaison du client et la transmet au serveur
+	Récupère la combinaison saisie par le client et la transmet au serveur
+	@param char* bufferGame
+	@param int socket
+	@param int difficulty
 */
 void play(char* bufferGame, int socket, int difficulty) {
 	printf("Entrez une combinaison de %d couleurs (sans espace entre les chiffres): \n", difficulty);
@@ -152,7 +163,8 @@ void play(char* bufferGame, int socket, int difficulty) {
 }
 
 /*
-	Affiche les couleurs choisient par le client
+	Affiche les couleurs choisient par le client dans le terminal
+	@param char* buffer_colors
 */
 void print_colors(char* buffer_colors) {
 	int i = 0;
@@ -175,9 +187,6 @@ void print_colors(char* buffer_colors) {
 		else if (buffer_colors[i]-48 == Orange) {
 			printf("Orange ");
 		}
-		else if (buffer_colors[i]-48 == Marron) {
-			printf("Marron ");
-		}
 		else if (buffer_colors[i]-48 == Rose) {
 			printf("Rose ");
 		}
@@ -191,19 +200,22 @@ void print_colors(char* buffer_colors) {
 
 /*
 	Controle la partie du client
+	@param int socket
+	@param int size
 */
 void init_game_client(int socket,int size) {
-	char* bufferJeuMoyen = malloc(size * sizeof(char));
+	// Initialise le buffer de notre partie
+	char* bufferJeu = malloc(size * sizeof(char));
 
 	printf("Les couleurs disponibles sont 0->rouge, 1->bleue, 2->vert, 3->jaune, 4->violet, 5->orange, 6->marron, 7->rose, 8->flushia\n");
 
-	play(bufferJeuMoyen, socket, size);
-
+	play(bufferJeu, socket, size);
+	// Initialise le buffer d'analyse du résultat fournit par le serveur
 	char* bufferRes = malloc(5 * sizeof(char));
-	int run = 0;
+	// Continue la partie tant que la bonne combinaison n'a pas été trouvée
 	while (!check_serv_res(bufferRes, socket, size)) {
-		play(bufferJeuMoyen, socket, size);
-		nb_essai += 1;
+		play(bufferJeu, socket, size);
+		nb_essai += 1; // Variable global qui conserve l'information du nombre d'essais effectués
 	}
-	free(bufferJeuMoyen);
+	free(bufferJeu);
 }

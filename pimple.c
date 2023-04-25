@@ -13,7 +13,6 @@ typedef enum pimpleColors {
     Jaune = 3,
     Violet = 4,
     Orange = 5,
-    Marron = 6,
-    Rose = 7,
-    Flushia = 8
+    Rose = 6,
+    Flushia = 7
 } pimple;
