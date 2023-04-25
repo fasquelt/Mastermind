@@ -97,7 +97,7 @@ void client_appli (char *serveur,char *service)
 		// Gestion du choix de difficulté
 		while ((bufferEmission[0]-48 != 0) && (bufferEmission[0]-48 != 1) && (bufferEmission[0]-48 != 2))
 		{
-			printf("Choisissez votre difficultée : Saisir :  0 'Facile' | 1 'Moyen' | 2 'Difficile' \n");
+			printf("Choisissez le chiffre correspondant à la difficulté :  0 'Facile' | 1 'Moyen' | 2 'Difficile' \n");
 			scanf("%s", bufferEmission);
 		}
 
