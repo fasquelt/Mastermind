@@ -75,7 +75,7 @@ void serveur_appli(char *service)
 	int serveurSocket;
 	int socketConnexion;
 	int nbReq = 1; // Nombre de requètes en file d'attente, 1 pour le moment
-	// Il faudrait créer des tableaux de socketConnexion et des tableau de p_adr_client pour gérer plusieurs client.
+	// Il faudrait créer des tableaux de socketConnexion et des tableau de p_adr_client pour gérer plusieurs clients.
 
 	struct sockaddr_in *p_adr_serveur = NULL;
 	struct sockaddr_in *p_adr_client = NULL;
@@ -193,7 +193,7 @@ void init_game(int *res, int size) {
 }
 
 /*
-	Controle the game
+	Control the game
 */
 void play_game(int socket, int difficulty) {
 	// Variable contenant la partie en cours.
